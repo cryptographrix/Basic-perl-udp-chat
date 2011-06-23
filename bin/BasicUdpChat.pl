@@ -19,12 +19,12 @@ use threads ('yield',
                  'stack_size' => 64*4096,
                  'exit' => 'threads_only',
                  'stringify');
+use threads::shared;
 
 # peers array.  This is kinda important...for now.
-my @peers;
+my @peers :shared;
 
 # Dependency on curl.  Dear God I'm sorry....for now.
-my $whatismyipURL = "http://automation.whatismyip.com/n09230945.asp";
 my $externalIP = `curl http://automation.whatismyip.com/n09230945.asp 2>/dev/null`;
 
 sub SetItUp {
@@ -43,7 +43,7 @@ sub SetItUp {
 		chomp($firstpeer);
 	}
 
-	if (!($firstpeer =~ m/OVERRIDE/)) {
+	if (!($firstpeer =~ /OVERRIDE/)) {
 		$peers[0] = $firstpeer;
 	}
 
@@ -52,10 +52,12 @@ sub SetItUp {
 
 sub sendMessage {
 	# This sub actually sends the messages
+
 	# Currently broadcasts to every @peers
 	my ($tobesent) = @_;
-	foreach my $peer (@peers) {
-		my $message = IO::Socket::INET->new(Proto=>"udp",PeerPort=>5000,PeerAddr=>$peer)
+
+	foreach my $remote (@peers) {
+		my $message = IO::Socket::INET->new(Proto=>"udp",PeerPort=>5000,PeerAddr=>$remote)
         	        or die "Can't make UDP socket: $@";
 
         	$message->send($tobesent) or die "Send error: $!\n";
@@ -87,7 +89,7 @@ sub receive_thread {
                 $response->recv($datagram,42,$flags);
                 print $response->peerhost,": $datagram\n";
 		if (!( grep { $_ eq $response->peerhost } @peers )) {
-			push(@peers, $response->peerhost);
+			push @peers, $response->peerhost;
 		}
         }
 }
