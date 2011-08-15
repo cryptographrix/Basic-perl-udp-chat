@@ -37,7 +37,7 @@ sub SetItUp {
 	chomp($firstpeer);
 	until ($firstpeer) {
 		print "I did not receive a hostname or IP.  If you do not enter one, this node will be receive-only until it hears from someone else.\n";
-		print "Enter 'OVERRIDE' if you are ok with this.\n";
+		print "Enter 'OVERRIDE' if you are ok with this.  The default hub is hub.nft.ag.\n";
 		print "Otherwise, please re-enter the hostname or IP:";
 		$firstpeer = <>;
 		chomp($firstpeer);
